@@ -67,7 +67,7 @@ class UnnatiTheme {
       ),
 
       // Cards
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surfaceWhite,
         elevation: 2,
         shadowColor: deepCharcoal.withOpacity(0.1),

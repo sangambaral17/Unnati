@@ -8,9 +8,9 @@ import 'package:shimmer/shimmer.dart';
 
 import 'providers/dashboard_metrics_provider.dart';
 import 'widgets/stat_card.dart';
-import '../../../services/vat_service.dart';
-import '../../core/theme/unnati_theme.dart';
-import '../../core/widgets/sync_status_badge.dart';
+import '../../services/vat_service.dart';
+import '../core/theme/unnati_theme.dart';
+import '../core/widgets/sync_status_badge.dart';
 
 /// Owner's Command Center (Dashboard)
 class DashboardScreen extends ConsumerWidget {

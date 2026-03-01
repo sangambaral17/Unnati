@@ -223,6 +223,43 @@ class SyncQueueTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Supplier table (Inventory Pro)
+class SuppliersTable extends Table {
+  @override
+  String get tableName => 'suppliers';
+
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get phone => text().nullable()();
+  TextColumn get pan => text().nullable()();
+  TextColumn get address => text().nullable()();
+  RealColumn get currentBalance => real().withDefault(const Constant(0))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Purchase Orders / Stock In (Inventory Pro)
+class PurchaseOrdersTable extends Table {
+  @override
+  String get tableName => 'purchase_orders';
+
+  TextColumn get id => text()();
+  TextColumn get poNumber => text()();
+  TextColumn get supplierId => text().references(SuppliersTable, #id)();
+  TextColumn get status => text().withDefault(const Constant('completed'))();
+  RealColumn get totalAmount => real()();
+  RealColumn get paidAmount => real().withDefault(const Constant(0))();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get receivedAt => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Audit Trail (Compliance & Security)
 class AuditTrailTable extends Table {
   @override
@@ -232,7 +269,7 @@ class AuditTrailTable extends Table {
   TextColumn get deviceId => text()();
   TextColumn get staffId => text()();
   TextColumn get action => text()();
-  TextColumn get entityName => text().nullable()();
+  TextColumn get entityName_ => text().named('entity_name').nullable()();
   TextColumn get entityId => text().nullable()();
   TextColumn get oldValue => text().nullable()(); // JSON
   TextColumn get newValue => text().nullable()(); // JSON

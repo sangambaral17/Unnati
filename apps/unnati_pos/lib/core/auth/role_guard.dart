@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/auth/auth_provider.dart';
+import 'auth_provider.dart';
 
 /// The Unnati staff roles.
 enum StaffRole { owner, manager, cashier }

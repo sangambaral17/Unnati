@@ -33,9 +33,9 @@ dependencies:
   workmanager: ^0.5.2
 
   # ── Printing (ESC/POS Thermal) ────────────────────────────────────────────
-  esc_pos_utils_plus: ^2.0.8
-  blue_thermal_printer: ^1.1.0     # Bluetooth thermal printer
-  usb_serial: ^0.5.0               # USB thermal printer (Windows/Android)
+  esc_pos_utils_plus: ^2.0.4
+  blue_thermal_printer: ^1.2.3     # Bluetooth thermal printer
+  usb_serial: ^0.5.2               # USB thermal printer (Windows/Android)
 
   # ── QR Code (Fonepay) ─────────────────────────────────────────────────────
   qr_flutter: ^4.1.0
@@ -54,13 +54,12 @@ dependencies:
 
   # ── UI ────────────────────────────────────────────────────────────────────
   google_fonts: ^6.2.1
-  flutter_animate: ^4.5.0
+  flutter_animate: ^4.5.2
   shimmer: ^3.0.0
   fl_chart: ^0.68.0
   excel: ^4.0.0
   file_picker: ^8.0.2
-  nepali_utils: ^1.2.1
-  path_provider: ^2.1.2
+  nepali_utils: ^3.0.8
 
 dev_dependencies:
   msix: ^3.16.8
@@ -68,10 +67,10 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^4.0.0
   drift_dev: ^2.18.0
-  build_runner: ^2.4.11
-  riverpod_generator: ^2.4.3
-  custom_lint: ^0.6.4
-  riverpod_lint: ^2.3.10
+  build_runner: ^2.4.0
+  riverpod_generator: ^2.4.0
+  custom_lint: ^0.6.0
+  riverpod_lint: ^2.3.0
 
 flutter:
   uses-material-design: true
@@ -85,7 +84,5 @@ msix_config:
   publisher_display_name: Walsong Group
   identity_name: WalsongGroup.UnnatiRetailOS
   msix_version: 1.0.0.0
-  logo_path: assets/logo/unnati_icon.png
   description: Local-First POS and Compliance Engine for Nepal
-  executable_name: unnati_pos.exe
-  capabilities: "internetClient, localSystemNetwork, documentsLibrary"
+  capabilities: "internetClient"

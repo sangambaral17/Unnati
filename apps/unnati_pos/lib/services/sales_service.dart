@@ -40,6 +40,7 @@ import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../data/local/database.dart';
+import 'audit_logger_service.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -208,16 +209,16 @@ class SalesService {
           billNumber: billNumber,
           staffId: input.staffId,
           customerId: Value(input.customerId),
-          status: 'completed',
-          paymentMethod: input.paymentMethod,
-          subTotal: vatBreakdown.subTotal,
-          discountAmt: 0,
-          taxableAmount: vatBreakdown.taxableAmount,
-          vatAmount: vatBreakdown.vatAmount,
-          grandTotal: vatBreakdown.grandTotal,
-          paidAmount: input.paidAmount,
-          changeAmount: changeAmount > 0 ? changeAmount : 0,
-          netProfit: vatBreakdown.netProfit,
+          status: const Value('completed'),
+          paymentMethod: Value(input.paymentMethod),
+          subTotal: Value(vatBreakdown.subTotal),
+          discountAmt: const Value(0),
+          taxableAmount: Value(vatBreakdown.taxableAmount),
+          vatAmount: Value(vatBreakdown.vatAmount),
+          grandTotal: Value(vatBreakdown.grandTotal),
+          paidAmount: Value(input.paidAmount),
+          changeAmount: Value(changeAmount > 0 ? changeAmount : 0),
+          netProfit: Value(vatBreakdown.netProfit),
           customerPan: Value(input.customerPan),
           fiscalYear: fiscalYear,
           fonepayQrRef: const Value(null),
@@ -241,10 +242,10 @@ class SalesService {
             qty: item.quantity,
             unitId: item.unitId,
             unitPrice: item.unitPrice,
-            discountPct: item.discountPct,
-            isVatApplicable: item.isVatApplicable,
+            discountPct: Value(item.discountPct),
+            isVatApplicable: Value(item.isVatApplicable),
             lineTotal: item.lineTotal,
-            costPrice: item.costPrice,
+            costPrice: Value(item.costPrice),
             createdAt: now,
           ),
         );
@@ -416,20 +417,20 @@ class SalesService {
             )
          );
 
-         // CDC update stock
-         await _enqueueCDC('products', item.productId, 'UPDATE', {
+          // CDC update stock
+         await _enqueueCDC(deviceId, 'products', item.productId, 'UPDATE', {
            'id': item.productId,
            'stock_qty': product.stockQty + item.qty,
            'updated_at': now.toIso8601String(),
-         }, deviceId);
+         });
       }
 
       // 3. CDC update Sale Status
-      await _enqueueCDC('sales', saleId, 'UPDATE', {
+      await _enqueueCDC(deviceId, 'sales', saleId, 'UPDATE', {
         'id': saleId,
         'status': 'cancelled',
         'updated_at': now.toIso8601String(),
-      }, deviceId);
+      });
 
       // 4. Fire Audit Trail (Must record reason for cancellation)
       final auditLogger = AuditLoggerService(_db);
@@ -444,6 +445,23 @@ class SalesService {
         reason: reason,
       );
     });
+  }
+
+  Future<void> _enqueueCDC(String deviceId, String tableName, String recordId, String operation, Map<String, dynamic> payload) async {
+    final now = DateTime.now().toUtc();
+    await _db.into(_db.syncQueueTable).insert(
+      SyncQueueTableCompanion.insert(
+        id: _uuid.v4(),
+        deviceId: deviceId,
+        tableName_: tableName,
+        recordId: recordId,
+        operation: operation,
+        payload: jsonEncode(payload),
+        localSeq: now.microsecondsSinceEpoch,
+        status: const Value('pending'),
+        createdAt: now,
+      ),
+    );
   }
 
   /// Computes the Nepal 13% VAT breakdown.

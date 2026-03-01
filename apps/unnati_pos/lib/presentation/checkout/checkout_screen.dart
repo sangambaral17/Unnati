@@ -23,10 +23,10 @@ class CheckoutScreen extends ConsumerWidget {
 
     return Shortcuts(
       shortcuts: <LogicalKeySet, Intent>{
-        LogicalKeySet(LogicalKeyboardKey.f1): const Intent.doNothing(), // Handled via raw listener below or custom intents
-        LogicalKeySet(LogicalKeyboardKey.f5): const Intent.doNothing(),
-        LogicalKeySet(LogicalKeyboardKey.f10): const Intent.doNothing(),
-        LogicalKeySet(LogicalKeyboardKey.escape): const Intent.doNothing(),
+        LogicalKeySet(LogicalKeyboardKey.f1): Intent.doNothing, // Handled via raw listener below or custom intents
+        LogicalKeySet(LogicalKeyboardKey.f5): Intent.doNothing,
+        LogicalKeySet(LogicalKeyboardKey.f10): Intent.doNothing,
+        LogicalKeySet(LogicalKeyboardKey.escape): Intent.doNothing,
       },
       child: Focus(
         autofocus: true,

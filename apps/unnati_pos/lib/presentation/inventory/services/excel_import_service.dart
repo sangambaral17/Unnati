@@ -5,7 +5,7 @@ import 'dart:convert';
 import 'package:file_picker/file_picker.dart';
 import 'package:excel/excel.dart';
 import 'package:drift/drift.dart';
-import '../../data/local/database.dart';
+import '../../../data/local/database.dart';
 
 class ExcelImportResult {
   final int rowsInserted;
@@ -79,7 +79,6 @@ class ExcelImportService {
                 stockQty: Value(double.parse(stockQtyStr)),
                 costPrice: Value(double.parse(costPriceStr)),
                 sellingPrice: Value(double.parse(sellingPriceStr)),
-                deviceId: Value(deviceId),
                 createdAt: DateTime.now(),
                 updatedAt: DateTime.now(),
             ));

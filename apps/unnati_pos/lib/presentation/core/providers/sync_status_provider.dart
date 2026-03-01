@@ -7,9 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
-import '../../services/sync_service.dart';
+import '../../../services/sync_service.dart';
 // Note: In real app, databaseProvider is imported from DI
-import '../../data/local/database.dart';
+import '../../../data/local/database.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) => AppDatabase());
 final syncServiceProvider = Provider<SyncService>((ref) => SyncService(ref.watch(databaseProvider)));

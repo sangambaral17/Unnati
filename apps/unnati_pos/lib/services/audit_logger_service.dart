@@ -3,7 +3,7 @@
 
 import 'dart:convert';
 import 'package:drift/drift.dart';
-import '../../data/local/database.dart';
+import '../data/local/database.dart';
 
 class AuditLoggerService {
   final AppDatabase _db;
@@ -34,7 +34,7 @@ class AuditLoggerService {
         deviceId: deviceId,
         staffId: staffId,
         action: action,
-        entityName: Value(entityName),
+        entityName_: Value(entityName),
         entityId: Value(entityId),
         oldValue: Value(oldJson),
         newValue: Value(newJson),
@@ -49,10 +49,10 @@ class AuditLoggerService {
       SyncQueueTableCompanion.insert(
         id: 'SYNC-$logId',
         deviceId: deviceId,
-        tableName: 'audit_trail',
+        tableName_: 'audit_trail',
         recordId: logId,
         operation: 'INSERT',
-        payload: {
+        payload: jsonEncode({
           'id': logId,
           'device_id': deviceId,
           'staff_id': staffId,
@@ -63,8 +63,10 @@ class AuditLoggerService {
           'new_value': newValue,
           'reason': reason,
           'created_at': now.toIso8601String(),
-        },
+        }),
         localSeq: localSeq,
+        status: const Value('pending'),
+        createdAt: now,
       )
     );
   }

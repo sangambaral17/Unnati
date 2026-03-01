@@ -3,7 +3,7 @@
 
 import 'package:intl/intl.dart';
 
-import '../repositories/sale_repository.dart';
+import '../data/repositories/sale_repository.dart';
 
 /// VAT rate for Nepal (13%)
 const double kVATRate = 0.13;

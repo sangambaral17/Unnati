@@ -3,9 +3,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../core/theme/unnati_theme.dart';
+import '../core/theme/unnati_theme.dart';
 import '../../data/local/database.dart';
 import 'package:drift/drift.dart' as drift;
+import 'dart:convert';
 
 // Provides the DB instance
 final databaseProvider = Provider<AppDatabase>((ref) => AppDatabase());
@@ -54,16 +55,18 @@ class _SetupWizardScreenState extends ConsumerState<SetupWizardScreen> {
         SyncQueueTableCompanion.insert(
           id: 'HANDSHAKE-${now.microsecondsSinceEpoch}',
           deviceId: deviceId,
-          tableName: 'device_registry',
+          tableName_: 'device_registry',
           recordId: deviceId,
           operation: 'INSERT',
-          payload: {
+          payload: jsonEncode({
              'device_id': deviceId,
              'device_name': 'Main Register - ${_nameController.text}',
              'store_pan': _panController.text,
              'registered_at': now.toIso8601String(),
-          },
+          }),
           localSeq: now.microsecondsSinceEpoch,
+          status: const drift.Value('pending'),
+          createdAt: now,
         )
       );
 

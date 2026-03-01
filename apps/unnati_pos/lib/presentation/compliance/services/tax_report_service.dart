@@ -5,7 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:nepali_utils/nepali_utils.dart';
-import '../../data/local/database.dart';
+import '../../../data/local/database.dart';
 
 class TaxReportService {
   final AppDatabase _db;

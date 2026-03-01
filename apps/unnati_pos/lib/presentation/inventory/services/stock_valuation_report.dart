@@ -5,7 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
-import '../../data/local/database.dart';
+import '../../../data/local/database.dart';
 
 class StockValuationReport {
   final AppDatabase _db;
