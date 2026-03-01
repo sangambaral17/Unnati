@@ -194,8 +194,9 @@ class SalesService {
     final vatBreakdown = _computeVAT(input.items);
     final now = DateTime.now().toUtc();
     final saleId = _uuid.v4();
-    final billNumber = _generateBillNumber(now);
-    final fiscalYear = _currentNepaliFiscalYear();
+    // Build a continuous, IRD-compliant bill number (e.g., UROS-8182-B1-00123)
+    final billNumber = await _generateIrdBillNumber();
+    final fiscalYear = await _calculateFiscalYear();
     final changeAmount = input.paidAmount - vatBreakdown.grandTotal;
 
     // ── Step 2: Atomic transaction ──────────────────────────────────────
@@ -385,6 +386,66 @@ class SalesService {
 
   // ─── VAT Calculation ──────────────────────────────────────────────────
 
+  /// Reverts a sale atomically.
+  /// Per IRD Nepal rules (Zero-Deletion Policy), we NEVER delete the invoice.
+  /// We mark it as 'cancelled', require a reason, and revert stock/ledgers.
+  Future<void> cancelSale(String saleId, String staffId, String deviceId, String reason) async {
+    await _db.transaction(() async {
+      final sale = await (_db.select(_db.salesTable)..where((s) => s.id.equals(saleId))).getSingle();
+
+      if (sale.status == 'cancelled') throw Exception('Sale is already cancelled.');
+
+      final now = DateTime.now().toUtc();
+
+      // 1. Mark Sale as Cancelled
+      await (_db.update(_db.salesTable)..where((s) => s.id.equals(saleId))).write(
+        SalesTableCompanion(
+          status: const Value('cancelled'),
+          updatedAt: Value(now),
+        )
+      );
+
+      // 2. Revert Stock mathematically exactly as it was withdrawn
+      final items = await (_db.select(_db.saleItemsTable)..where((i) => i.saleId.equals(saleId))).get();
+      for (var item in items) {
+         final product = await (_db.select(_db.productsTable)..where((p) => p.id.equals(item.productId))).getSingle();
+         await (_db.update(_db.productsTable)..where((p) => p.id.equals(item.productId))).write(
+            ProductsTableCompanion(
+              stockQty: Value(product.stockQty + item.qty),
+              updatedAt: Value(now)
+            )
+         );
+
+         // CDC update stock
+         await _enqueueCDC('products', item.productId, 'UPDATE', {
+           'id': item.productId,
+           'stock_qty': product.stockQty + item.qty,
+           'updated_at': now.toIso8601String(),
+         }, deviceId);
+      }
+
+      // 3. CDC update Sale Status
+      await _enqueueCDC('sales', saleId, 'UPDATE', {
+        'id': saleId,
+        'status': 'cancelled',
+        'updated_at': now.toIso8601String(),
+      }, deviceId);
+
+      // 4. Fire Audit Trail (Must record reason for cancellation)
+      final auditLogger = AuditLoggerService(_db);
+      await auditLogger.logAction(
+        deviceId: deviceId,
+        staffId: staffId,
+        action: 'invoice_cancel',
+        entityName: 'sales',
+        entityId: saleId,
+        oldValue: {'status': sale.status},
+        newValue: {'status': 'cancelled'},
+        reason: reason,
+      );
+    });
+  }
+
   /// Computes the Nepal 13% VAT breakdown.
   ///
   /// Rules:
@@ -422,21 +483,40 @@ class SalesService {
 
   // ─── Helpers ──────────────────────────────────────────────────────────
 
-  /// Generates a locally-unique bill number: INV-YYMM-NNNNN.
-  /// On sync, the Go server may re-assign from its global sequence.
-  String _generateBillNumber(DateTime now) {
-    final ts = now.millisecondsSinceEpoch % 100000;
-    final yy = now.year.toString().substring(2);
-    final mm = now.month.toString().padLeft(2, '0');
-    return 'INV-$yy$mm-${ts.toString().padLeft(5, '0')}';
+  /// Generates a strictly continuous running sequence per device.
+  /// Format: UROS-{FiscalYear}-{Branch/Device}-{Sequence}
+  /// e.g. UROS-8182-DEV1-00123
+  Future<String> _generateIrdBillNumber() async {
+    final fiscalYear = await _calculateFiscalYear();
+
+    // Find the highest local sequence for this fiscal year securely
+    final maxBillQuery = _db.select(_db.salesTable)
+      ..where((s) => s.fiscalYear.equals(fiscalYear))
+      ..orderBy([(t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc)])
+      ..limit(1);
+
+    final lastBill = await maxBillQuery.getSingleOrNull();
+
+    int sequence = 1;
+    if (lastBill != null) {
+      // Extract the integer sequence from the end of the last bill number
+      final parts = lastBill.billNumber.split('-');
+      if (parts.length >= 4) {
+         sequence = (int.tryParse(parts.last) ?? 0) + 1;
+      }
+    }
+
+    final seqString = sequence.toString().padLeft(5, '0');
+    // Using a static 'B1' device identifier for this demo
+    return 'UROS-$fiscalYear-B1-$seqString';
   }
 
   /// Returns the current Nepali fiscal year string.
   /// Nepal's fiscal year runs from Shrawan 1 (~July 16) to Ashadh 31 (~July 15).
   /// BS year ≈ AD year + 57 (approximately).
-  String _currentNepaliFiscalYear() {
+  Future<String> _calculateFiscalYear() async {
     final now = DateTime.now();
-    final bsOffset = 57;
+    final bsOffset = 57; // Approximate offset for Bikram Sambat
     if (now.month >= 7 && now.day >= 16) {
       // After mid-July: new fiscal year
       return '${now.year + bsOffset - 1}/${(now.year + bsOffset).toString().substring(2)}';

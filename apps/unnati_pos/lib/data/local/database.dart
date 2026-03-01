@@ -223,6 +223,26 @@ class SyncQueueTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Audit Trail (Compliance & Security)
+class AuditTrailTable extends Table {
+  @override
+  String get tableName => 'audit_trail';
+
+  TextColumn get id => text()();
+  TextColumn get deviceId => text()();
+  TextColumn get staffId => text()();
+  TextColumn get action => text()();
+  TextColumn get entityName => text().nullable()();
+  TextColumn get entityId => text().nullable()();
+  TextColumn get oldValue => text().nullable()(); // JSON
+  TextColumn get newValue => text().nullable()(); // JSON
+  TextColumn get reason => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // AppDatabase — the single SQLite database instance
 // ─────────────────────────────────────────────────────────────────────────────
@@ -239,6 +259,7 @@ class SyncQueueTable extends Table {
   PurchaseOrdersTable,
   LedgerEntriesTable,
   SyncQueueTable,
+  AuditTrailTable,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());

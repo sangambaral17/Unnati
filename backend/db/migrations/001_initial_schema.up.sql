@@ -319,6 +319,25 @@ CREATE INDEX idx_sync_queue_device_status ON sync_queue (device_id, status);
 CREATE INDEX idx_sync_queue_local_seq ON sync_queue (device_id, local_seq);
 
 -- ============================================================================
+-- AUDIT TRAIL (Compliance & Security)
+-- ============================================================================
+CREATE TABLE audit_trail (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    device_id   UUID NOT NULL,
+    staff_id    UUID NOT NULL REFERENCES staff(id),
+    action      VARCHAR(50) NOT NULL,    -- 'login', 'price_change', 'invoice_cancel', 'manual_sync', 'stock_adjustment'
+    entity_name VARCHAR(50),             -- 'products', 'sales'
+    entity_id   UUID,
+    old_value   JSONB,
+    new_value   JSONB,
+    reason      TEXT,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_audit_trail_created_at ON audit_trail (created_at DESC);
+CREATE INDEX idx_audit_trail_staff on audit_trail(staff_id);
+
+-- ============================================================================
 -- DEVICE REGISTRY (Tracks all sync clients)
 -- ============================================================================
 CREATE TABLE device_registry (
