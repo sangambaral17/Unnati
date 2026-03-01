@@ -9,6 +9,22 @@ Write-Host ""
 # Ensure we are in the Flutter project directory
 Set-Location -Path "d:\AntigravityProjects\Unnati\apps\unnati_pos"
 
+# Check Prerequisites
+if (!(Get-Command flutter -ErrorAction SilentlyContinue)) {
+    Write-Host ""
+    Write-Host "❌ ERROR: 'flutter' command not found in your environment PATH." -ForegroundColor Red
+    Write-Host "Please run this script from the 'Flutter Console' or add your Flutter SDK 'bin' folder to your Windows PATH." -ForegroundColor Yellow
+    Write-Host "Example PATH: C:\src\flutter\bin" -ForegroundColor Cyan
+    exit 1
+}
+
+if (!(Get-Command dart -ErrorAction SilentlyContinue)) {
+    Write-Host ""
+    Write-Host "❌ ERROR: 'dart' command not found in your environment PATH." -ForegroundColor Red
+    Write-Host "Please ensure the Dart SDK is added to your Windows PATH." -ForegroundColor Yellow
+    exit 1
+}
+
 # 1. Get packages
 Write-Host "[1/3] Fetching latest Flutter dependencies..." -ForegroundColor Cyan
 flutter pub get
