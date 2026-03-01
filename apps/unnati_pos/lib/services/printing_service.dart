@@ -7,6 +7,10 @@
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:nepali_utils/nepali_utils.dart';
 import 'vat_service.dart';
 import '../data/repositories/sale_repository.dart';
 import '../data/local/database.dart';
