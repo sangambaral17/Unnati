@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:shimmer/shimmer.dart';
 
 import 'providers/dashboard_metrics_provider.dart';
 import 'widgets/stat_card.dart';
@@ -44,7 +45,7 @@ class DashboardScreen extends ConsumerWidget {
             Expanded(
               child: metricsAsync.when(
                 data: (metrics) => _buildDashboardContent(context, metrics),
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => _buildShimmerLoading(context),
                 error: (err, stack) => Center(child: Text('Error loading dashboard: $err')),
               ),
             ),
@@ -189,6 +190,60 @@ class DashboardScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShimmerLoading(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    int crossAxisCount = screenWidth > 1200 ? 4 : (screenWidth > 800 ? 2 : 1);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GridView.count(
+            crossAxisCount: crossAxisCount,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: crossAxisCount == 1 ? 2.5 : 1.5,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: List.generate(4, (index) => Shimmer.fromColors(
+              baseColor: Colors.grey.shade300,
+              highlightColor: Colors.white,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            )),
+          ),
+          const SizedBox(height: 32),
+          Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.white,
+            child: Container(
+              height: 24,
+              width: 200,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Shimmer.fromColors(
+            baseColor: Colors.grey.shade300,
+            highlightColor: Colors.white,
+            child: Container(
+              height: 300,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
           ),

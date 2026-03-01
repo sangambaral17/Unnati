@@ -243,6 +243,23 @@ class AuditTrailTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Store Profile (For First-Run Wizard)
+class StoreProfileTable extends Table {
+  @override
+  String get tableName => 'store_profile';
+
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get panVat => text()();
+  TextColumn get address => text()();
+  RealColumn get openingBalance => real()();
+  TextColumn get deviceId => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // AppDatabase — the single SQLite database instance
 // ─────────────────────────────────────────────────────────────────────────────
@@ -260,6 +277,7 @@ class AuditTrailTable extends Table {
   LedgerEntriesTable,
   SyncQueueTable,
   AuditTrailTable,
+  StoreProfileTable,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());

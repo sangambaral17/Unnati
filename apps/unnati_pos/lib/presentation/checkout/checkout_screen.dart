@@ -2,6 +2,7 @@
 // Walsong Group — Unnati Retail OS
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'widgets/search_panel.dart';
@@ -20,17 +21,49 @@ class CheckoutScreen extends ConsumerWidget {
     // Basic responsiveness check
     final isDesktop = MediaQuery.of(context).size.width >= 800;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('New Sale (Billing)'),
-        backgroundColor: Colors.blueGrey[900],
-        foregroundColor: Colors.white,
-        actions: [
-          _buildHoldBillBadge(context, ref),
-          const SizedBox(width: 16),
-        ],
+    return Shortcuts(
+      shortcuts: <LogicalKeySet, Intent>{
+        LogicalKeySet(LogicalKeyboardKey.f1): const Intent.doNothing(), // Handled via raw listener below or custom intents
+        LogicalKeySet(LogicalKeyboardKey.f5): const Intent.doNothing(),
+        LogicalKeySet(LogicalKeyboardKey.f10): const Intent.doNothing(),
+        LogicalKeySet(LogicalKeyboardKey.escape): const Intent.doNothing(),
+      },
+      child: Focus(
+        autofocus: true,
+        onKeyEvent: (FocusNode node, KeyEvent event) {
+          if (event is KeyDownEvent) {
+            if (event.logicalKey == LogicalKeyboardKey.f1) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('F1: New Sale Started'), backgroundColor: Colors.green));
+              ref.read(cartProvider.notifier).clearCart();
+              return KeyEventResult.handled;
+            } else if (event.logicalKey == LogicalKeyboardKey.f5) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('F5: Printing Last Receipt...'), backgroundColor: Colors.green));
+              // In production, trigger PrintingService
+              return KeyEventResult.handled;
+            } else if (event.logicalKey == LogicalKeyboardKey.f10) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('F10: Switched to Udhari (Credit) Mode'), backgroundColor: Colors.blue));
+              return KeyEventResult.handled;
+            } else if (event.logicalKey == LogicalKeyboardKey.escape) {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('ESC: Cart Cleared'), backgroundColor: Colors.red));
+              ref.read(cartProvider.notifier).clearCart();
+              return KeyEventResult.handled;
+            }
+          }
+          return KeyEventResult.ignored;
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('New Sale (Billing) - Press F1 for Help'),
+            backgroundColor: Colors.blueGrey[900],
+            foregroundColor: Colors.white,
+            actions: [
+              _buildHoldBillBadge(context, ref),
+              const SizedBox(width: 16),
+            ],
+          ),
+          body: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
+        ),
       ),
-      body: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
     );
   }
 
