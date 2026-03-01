@@ -235,6 +235,8 @@ class SyncQueueTable extends Table {
   SalesTable,
   SaleItemsTable,
   CustomersTable,
+  SuppliersTable,
+  PurchaseOrdersTable,
   LedgerEntriesTable,
   SyncQueueTable,
 ])

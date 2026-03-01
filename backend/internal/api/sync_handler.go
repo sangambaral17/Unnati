@@ -114,6 +114,10 @@ func (h *syncHandler) applyDelta(ctx interface{ Value(key any) any }, item domai
 		return h.applySaleItemDelta(item)
 	case "customers":
 		return h.applyCustomerDelta(item)
+	case "suppliers":
+		return h.applySupplierDelta(item)
+	case "purchase_orders":
+		return h.applyPurchaseOrderDelta(item)
 	case "ledger_entries":
 		return h.applyLedgerDelta(item)
 	default:
@@ -257,6 +261,56 @@ func (h *syncHandler) applyCustomerDelta(item domain.SyncQueueItem) (*domain.Con
 		incoming.ID, incoming.Name, incoming.Phone, incoming.PAN, incoming.Address,
 		incoming.CreditLimit, incoming.CurrentDebt, incoming.IsActive, incoming.DeviceID,
 		incoming.UpdatedAt, incoming.CreatedAt,
+	)
+
+	return nil, err
+}
+
+func (h *syncHandler) applySupplierDelta(item domain.SyncQueueItem) (*domain.ConflictResult, error) {
+	var incoming domain.Supplier
+	if err := json.Unmarshal(item.Payload, &incoming); err != nil {
+		return nil, err
+	}
+
+	_, err := h.db.Exec(`
+		INSERT INTO suppliers (id, name, phone, pan, contact_person, address, current_payable, is_active, device_id, updated_at, created_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		ON CONFLICT (id) DO UPDATE SET
+			name = EXCLUDED.name,
+			phone = EXCLUDED.phone,
+			pan = EXCLUDED.pan,
+			contact_person = EXCLUDED.contact_person,
+			address = EXCLUDED.address,
+			is_active = EXCLUDED.is_active,
+			device_id = EXCLUDED.device_id,
+			updated_at = EXCLUDED.updated_at
+		WHERE suppliers.updated_at <= EXCLUDED.updated_at`,
+		incoming.ID, incoming.Name, incoming.Phone, incoming.PAN, incoming.ContactPerson,
+		incoming.Address, incoming.CurrentPayable, incoming.IsActive, incoming.DeviceID,
+		incoming.UpdatedAt, incoming.CreatedAt,
+	)
+
+	return nil, err
+}
+
+func (h *syncHandler) applyPurchaseOrderDelta(item domain.SyncQueueItem) (*domain.ConflictResult, error) {
+	var incoming domain.PurchaseOrder
+	if err := json.Unmarshal(item.Payload, &incoming); err != nil {
+		return nil, err
+	}
+
+	_, err := h.db.Exec(`
+		INSERT INTO purchase_orders (id, po_number, supplier_id, staff_id, status, payment_method, total_amount, paid_amount, device_id, received_at, updated_at, created_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+		ON CONFLICT (id) DO UPDATE SET
+			status = EXCLUDED.status,
+			paid_amount = EXCLUDED.paid_amount,
+			payment_method = EXCLUDED.payment_method,
+			updated_at = EXCLUDED.updated_at
+		WHERE purchase_orders.updated_at <= EXCLUDED.updated_at`,
+		incoming.ID, incoming.PONumber, incoming.SupplierID, incoming.StaffID,
+		incoming.Status, incoming.PaymentMethod, incoming.TotalAmount, incoming.PaidAmount,
+		incoming.DeviceID, incoming.ReceivedAt, incoming.UpdatedAt, incoming.CreatedAt,
 	)
 
 	return nil, err

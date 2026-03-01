@@ -136,6 +136,49 @@ CREATE TABLE customers (
 );
 
 -- ============================================================================
+-- SUPPLIERS (B2B Purchase System)
+-- ============================================================================
+CREATE TABLE suppliers (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name            VARCHAR(150) NOT NULL,
+    phone           VARCHAR(20) UNIQUE,
+    pan             VARCHAR(20),
+    contact_person  VARCHAR(100),
+    address         TEXT,
+    current_payable NUMERIC(15, 2) NOT NULL DEFAULT 0,   -- Amount we owe them
+    is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    device_id       UUID,
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER trg_suppliers_updated_at BEFORE UPDATE ON suppliers
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ============================================================================
+-- PURCHASE ORDERS (Stock In)
+-- ============================================================================
+CREATE TABLE purchase_orders (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    po_number       VARCHAR(50) NOT NULL UNIQUE,
+    supplier_id     UUID NOT NULL REFERENCES suppliers(id),
+    staff_id        UUID NOT NULL REFERENCES staff(id),
+    status          VARCHAR(20) NOT NULL DEFAULT 'completed' CHECK (status IN ('draft', 'completed', 'cancelled')),
+    payment_method  VARCHAR(20) NOT NULL DEFAULT 'cash' CHECK (payment_method IN ('cash', 'credit', 'bank')),
+    
+    -- Amounts
+    total_amount    NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    paid_amount     NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    
+    -- CDC
+    device_id       UUID NOT NULL,
+    received_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+
+-- ============================================================================
 -- SALES (Bills) — TimescaleDB Hypertable on sold_at
 -- ============================================================================
 CREATE TABLE sales (
