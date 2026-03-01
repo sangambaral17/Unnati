@@ -71,6 +71,20 @@ class UnitConversionsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Product categories (hierarchical: Hardware > Fasteners, Electrical > Wiring).
+class ProductCategoriesTable extends Table {
+  @override
+  String get tableName => 'product_categories';
+
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  TextColumn get parentId => text().nullable()();  // Self-referential for sub-categories
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Local Sales table.
 class SalesTable extends Table {
   @override
@@ -217,6 +231,7 @@ class SyncQueueTable extends Table {
   ProductsTable,
   UnitsTable,
   UnitConversionsTable,
+  ProductCategoriesTable,
   SalesTable,
   SaleItemsTable,
   CustomersTable,

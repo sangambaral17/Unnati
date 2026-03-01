@@ -344,3 +344,60 @@ BEGIN
     RETURN 'INV-' || fiscal || '-' || LPAD(seq_val::TEXT, 5, '0');
 END;
 $$ LANGUAGE plpgsql;
+
+-- ============================================================================
+-- SYNC LOG (Audit trail: which device sent which update and when)
+-- ============================================================================
+-- Unlike sync_queue (which is a local device concern), sync_log lives
+-- on the PostgreSQL server and records every successfully applied sync batch.
+-- This is the answer to: "Which device changed this row, and when?"
+CREATE TABLE sync_log (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    device_id       UUID NOT NULL,
+    device_name     VARCHAR(100),
+    staff_id        UUID REFERENCES staff(id),
+    table_name      VARCHAR(50) NOT NULL,
+    record_id       UUID NOT NULL,
+    operation       VARCHAR(10) NOT NULL CHECK (operation IN ('INSERT', 'UPDATE', 'DELETE')),
+    payload_hash    VARCHAR(64),                                -- SHA-256 of the payload (dedup)
+    local_seq       BIGINT NOT NULL,                            -- Device-side monotonic counter
+    server_seq      BIGSERIAL,                                  -- Server-side monotonic counter
+    conflict_status VARCHAR(20) DEFAULT 'none'
+                    CHECK (conflict_status IN ('none', 'client_wins', 'server_wins')),
+    applied_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    client_timestamp TIMESTAMPTZ NOT NULL,                      -- When the change was made on device
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_sync_log_device ON sync_log (device_id, applied_at DESC);
+CREATE INDEX idx_sync_log_table_record ON sync_log (table_name, record_id);
+CREATE INDEX idx_sync_log_server_seq ON sync_log (server_seq);
+
+-- ============================================================================
+-- AUTO-DEDUCT STOCK ON sale_items INSERT
+-- ============================================================================
+-- Safety net: even if the application layer fails to deduct stock,
+-- this trigger ensures consistency at the database level.
+CREATE OR REPLACE FUNCTION deduct_product_stock()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE products
+    SET stock_qty = stock_qty - NEW.qty,
+        updated_at = NOW()
+    WHERE id = NEW.product_id
+      AND stock_qty >= NEW.qty;
+
+    -- Raise an exception if the UPDATE matched zero rows (insufficient stock)
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Insufficient stock for product %', NEW.product_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_sale_items_deduct_stock
+    AFTER INSERT ON sale_items
+    FOR EACH ROW
+    EXECUTE FUNCTION deduct_product_stock();
+
