@@ -25,6 +25,7 @@ func RegisterSyncRoutes(rg *gin.RouterGroup, db *sqlx.DB, q *queue.RedisSyncQueu
 	h := &syncHandler{db: db, queue: q, log: log}
 	rg.POST("/sync/push", h.Push)
 	rg.GET("/sync/status/:device_id", h.GetStatus)
+	rg.GET("/health/sync/:device_id", h.GetSyncHealth)
 	rg.POST("/sync/register-device", h.RegisterDevice)
 }
 
@@ -183,6 +184,15 @@ func (h *syncHandler) applySaleDelta(item domain.SyncQueueItem) (*domain.Conflic
 		return nil, err
 	}
 
+	// Idempotency Check: If the same sale_id is pushed twice due to a network retry,
+	// the server must ignore the second one but return a 200 OK.
+	var existingUpdatedAt time.Time
+	err := h.db.QueryRow(`SELECT updated_at FROM sales WHERE id = $1`, incoming.ID).Scan(&existingUpdatedAt)
+	if err == nil && existingUpdatedAt.Equal(incoming.UpdatedAt) {
+		h.log.Info("Idempotent retry detected for sale (ignored safely)", zap.String("sale_id", incoming.ID))
+		return nil, nil // Return 200 OK without double-processing
+	}
+
 	// Sales are mostly append-only (completed bills don't change)
 	// Only allow updates for: held→completed, draft→cancelled
 	_, err := h.db.Exec(`
@@ -323,6 +333,19 @@ func (h *syncHandler) RegisterDevice(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "device registered", "device_id": device.DeviceID})
+}
+
+// GetSyncHealth handles GET /api/v1/health/sync/:device_id
+// Returns the last synced timestamp for a specific device.
+func (h *syncHandler) GetSyncHealth(c *gin.Context) {
+	deviceID := c.Param("device_id")
+	var lastSync time.Time
+	err := h.db.QueryRow(\`SELECT COALESCE(last_sync_at, '1970-01-01'::timestamptz) FROM device_registry WHERE device_id = $1\`, deviceID).Scan(&lastSync)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "device not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"device_id": deviceID, "last_sync_at": lastSync})
 }
 
 // RegisterProductRoutes, RegisterSaleRoutes, RegisterLedgerRoutes, RegisterStaffRoutes, RegisterAuthRoutes 

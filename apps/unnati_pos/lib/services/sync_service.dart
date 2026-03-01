@@ -122,6 +122,13 @@ class SyncService {
 
         return true;
       } else {
+        // Output detailed 500 error logging for the admin/developer
+        if (response.statusCode >= 500) {
+          print('🔴 [Unnati Sync] CRITICAL: Server returned ${response.statusCode}');
+          print('🔴 [Unnati Sync] Failed Payload Batch:');
+          print(const JsonEncoder.withIndent('  ').convert(payload));
+        }
+        
         // Server error — reset to pending for retry
         await _resetToPending(ids);
         return false;
