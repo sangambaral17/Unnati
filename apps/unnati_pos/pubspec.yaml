@@ -63,6 +63,7 @@ dependencies:
   path_provider: ^2.1.2
 
 dev_dependencies:
+  msix: ^3.16.8
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
@@ -78,3 +79,13 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/logo/
+
+msix_config:
+  display_name: Unnati Retail OS
+  publisher_display_name: Walsong Group
+  identity_name: WalsongGroup.UnnatiRetailOS
+  msix_version: 1.0.0.0
+  logo_path: assets/logo/unnati_icon.png
+  description: Local-First POS and Compliance Engine for Nepal
+  executable_name: unnati_pos.exe
+  capabilities: "internetClient, localSystemNetwork, documentsLibrary"
