@@ -1,8 +1,8 @@
 # Copyright (c) 2026 Walsong Group. All rights reserved.
-# Walsong Group — Unnati Retail OS (Build Script)
+# Walsong Group - Unnati Retail OS (Build Script)
 
 Write-Host "=============================================" -ForegroundColor Green
-Write-Host "   UNNATI RETAIL OS — MSIX INSTALLER BUILD   " -ForegroundColor Green
+Write-Host "   UNNATI RETAIL OS - MSIX INSTALLER BUILD   " -ForegroundColor Green
 Write-Host "=============================================" -ForegroundColor Green
 Write-Host ""
 
@@ -23,7 +23,7 @@ dart run msix:create
 
 Write-Host ""
 Write-Host "=============================================" -ForegroundColor Green
-Write-Host "✅ SUCCESS! Installer creation complete." -ForegroundColor Green
+Write-Host "SUCCESS! Installer creation complete." -ForegroundColor Green
 Write-Host "Your installer (.msix) is located at:" -ForegroundColor Yellow
 Write-Host "d:\AntigravityProjects\Unnati\apps\unnati_pos\build\windows\x64\runner\Release\unnati_pos.msix" -ForegroundColor White
 Write-Host "Double-click the .msix file to install Unnati Retail OS natively on this PC." -ForegroundColor Yellow
