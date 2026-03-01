@@ -1,0 +1,88 @@
+# ========================
+# Flutter / Dart
+# ========================
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/pubspec.lock
+**/.packages
+**/generated_plugin_registrant.dart
+**/*.g.dart
+**/*.freezed.dart
+**/drift_migrations/
+
+# Flutter specific
+**/ios/.symlinks/
+**/ios/Pods/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/android/.gradle/
+**/android/local.properties
+**/android/key.properties
+**/android/app/google-services.json
+**/web/
+**/linux/
+**/macos/
+**/windows/runner/
+
+# ========================
+# Go
+# ========================
+backend/vendor/
+backend/*.exe
+backend/*.exe~
+backend/*.dll
+backend/*.so
+backend/*.dylib
+backend/tmp/
+backend/.air.toml.local
+
+# ========================
+# Secrets & Environment
+# ========================
+.env
+.env.local
+.env.production
+*.pem
+*.key
+*.crt
+secrets/
+
+# ========================
+# Docker
+# ========================
+infra/postgres/data/
+infra/redis/data/
+!infra/postgres/init.sql
+!infra/docker-compose.yml
+
+# ========================
+# IDE & Editors
+# ========================
+.vscode/settings.local.json
+.idea/
+*.iml
+*.suo
+*.user
+.vs/
+*.swp
+*.swo
+*~
+
+# ========================
+# OS
+# ========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ========================
+# Logs & Temp
+# ========================
+*.log
+*.tmp
+*.cache
+coverage/
